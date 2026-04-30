@@ -1,97 +1,78 @@
-research analysis:
+# LLM Accessibility Research — Analysis Script
 
+This script analyzes how well three LLMs (GPT, Claude, and Gemini) perform at detecting and fixing web accessibility violations in dashboard code. It runs a set of statistical analyses and produces charts comparing model performance across two prompt strategies.
 
-=======================================================
-1. MODEL PERFORMANCE COMPARISON
-=======================================================
+## Requirements
 
-Mean Total Score per Model:
-        Mean Total Score  Std Dev    N
-Model                                 
-Claude             12.00     1.93  120
-GPT                11.58     2.01  120
-Gemini             10.97     2.41  120
+```bash
+pip3 install pandas matplotlib scipy numpy openpyxl
+```
 
-Mean Score per Metric per Model:
-        False_Positives  Detection_Accuracy  Implementation_Accuracy  Code_Reasoning  Violation_Presence
-Model                                                                                                   
-Claude             1.02                2.88                     2.70            2.67                2.76
-GPT                1.17                2.84                     2.62            2.28                2.62
-Gemini             1.27                2.77                     2.34            2.22                2.37
+## Setup
 
-One-Way ANOVA: F = 7.152, p = 0.0009
-   Statistically significant difference between models (p < 0.05)
+The Excel data file must be in the same folder as `analysis.py`:
 
-=======================================================
-2. PROMPT COMPARISON
-=======================================================
+```
+your-folder/
+├── analysis.py
+└── llm_accessibility_results.xlsx
+```
 
-Mean Total Score per Prompt:
-        Mean Total Score  Std Dev    N
-Prompt                                
-P1                 11.20     2.35  180
-P2                 11.83     1.92  180
+Running the script will create a `results/` folder automatically.
 
-P2 vs P1 % Change: +5.6%
+## Usage
 
-Paired t-test: t = -4.055, p = 0.0001
-   Statistically significant difference between prompts (p < 0.05)
+```bash
+python3 analysis.py
+```
 
-=======================================================
-3. SUCCESS RATE  (Total Score = 15 = perfect)
-=======================================================
+All output goes to `results/analysis_results.txt` rather than the terminal. A single confirmation line prints when the script finishes.
 
-Success Rate per Model:
-        Successes  Total Runs  Success %
-Model                                   
-Claude         17         120       14.2
-GPT            11         120        9.2
-Gemini          7         120        5.8
+## Input Format
 
-Success Rate per Prompt:
-        Successes  Total Runs  Success %
-Prompt                                  
-P1             20         180       11.1
-P2             15         180        8.3
+The script expects an Excel file with the following columns:
 
-=======================================================
-4. ERROR ANALYSIS  (Score 0 or 1 = failure)
-=======================================================
+| Column | Description |
+|---|---|
+| `Model` | GPT, Claude, or Gemini |
+| `Prompt` | P1 or P2 |
+| `Dashboard_ID` | Identifier for the dashboard being evaluated |
+| `Issue_Type` | The accessibility violation type |
+| `False_Positives` | Score 0-3 |
+| `Detection_Accuracy` | Score 0-3 |
+| `Implementation_Accuracy` | Score 0-3 |
+| `Code_Reasoning` | Score 0-3 |
+| `Violation_Presence` | Score 0-3 |
+| `Total_Score` | Sum of the five metrics (auto-calculated if missing) |
 
-Failure Count per Metric per Model (score ≤ 1):
-        False\nPositives  Detection\nAccuracy  Implementation\nAccuracy  Code\nReasoning  Violation\nPresence
-Model                                                                                                        
-Claude                74                    0                         2                2                    0
-GPT                   70                    0                         4                9                    3
-Gemini                72                    1                         8               10                    6
+Each metric is scored 0 to 3, giving a maximum total score of 15.
 
-=======================================================
-5. ISSUE-TYPE BREAKDOWN
-=======================================================
+## Analyses
 
-Mean Total Score by Issue Type and Model:
-Model                     Claude   GPT  Gemini
-Issue_Type                                    
-Aria Labels                11.30  10.5    8.40
-Color Contrast             13.35  13.3   13.40
-Empty Buttons              12.10  11.5    9.45
-Empty Links                 9.50   9.6    9.95
-Missing Form Input Label   11.85  11.6   11.10
-Non-text Context           13.90  13.0   13.50
+1. **Model performance** — mean total score per model, per-metric breakdown, and a one-way ANOVA
+2. **Prompt comparison** — mean scores for P1 vs P2, percentage change, and a paired t-test
+3. **Success rate** — how often each model and prompt achieved a perfect score of 15
+4. **Error analysis** — failure counts per metric per model (score of 0 or 1)
+5. **Issue-type breakdown** — mean scores cross-tabulated by violation type and model
+6. **Violation comparison** — mean scores per violation type and an independent t-test
 
-=======================================================
-6. COMPARISON OF VIOLATIONS
-=======================================================
+## Charts
 
-Mean Total Score per Violation Type:
-                          Mean Total Score  Std Dev   N
-Issue_Type                                             
-Aria Labels                          10.07     1.66  60
-Color Contrast                       13.35     1.61  60
-Empty Buttons                        11.02     1.84  60
-Empty Links                           9.68     1.51  60
-Missing Form Input Label             11.52     1.31  60
-Non-text Context                     13.47     1.65  60
+All charts are saved to the `charts/` folder at 150 DPI.
 
-   Found 6 issue types: ['Color Contrast', 'Non-text Context', 'Missing Form Input Label', 'Empty Buttons', 'Aria Labels', 'Empty Links']
-   Independent t-test requires exactly 2 groups - skipping.
+| File | Description |
+|---|---|
+| `chart1_model_comparison.png` | Bar chart of mean total score per model with standard deviation error bars |
+| `chart2_prompt_comparison.png` | Grouped bar chart comparing P1 and P2 scores for each model |
+| `chart4_spider_charts.png` | Radar charts showing each model's average score across all five metrics |
+| `chart5_stacked_errors.png` | Stacked bar chart of failure counts per metric per model |
+
+## Configuration
+
+A few constants at the top of `analysis.py` can be adjusted if needed:
+
+```python
+EXCEL_FILE    = "llm_accessibility_results.xlsx"
+OUTPUT_FOLDER = "results"
+PERFECT_SCORE = 15
+```

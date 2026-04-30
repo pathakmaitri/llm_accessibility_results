@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore")
 # Configurations
 
 EXCEL_FILE = "llm_accessibility_results.xlsx"   # must be in same folder as this script
-OUTPUT_FOLDER = "charts"                          # folder where charts will be saved
+OUTPUT_FOLDER = "results"                          # folder where charts will be saved
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 # Column names
@@ -278,39 +278,41 @@ def chart_prompt_comparison(df):
 
 
 # Chart 3: Scatter Plot — Model vs Prompt
-def chart_scatter_model_prompt(df):
-    print(" Generating Chart 3: Scatter Plot (Model vs Prompt) ")
-    fig, ax = plt.subplots(figsize=(9, 6))
+# def chart_scatter_model_prompt(df):
+#     print(" Generating Chart 3: Scatter Plot (Model vs Prompt) ")
+#     fig, ax = plt.subplots(figsize=(9, 6))
 
-    prompt_map = {"P1": 1, "P2": 2}
-    jitter_x = 0.07
-    jitter_y = 0.15
+#     prompt_map = {"P1": 1, "P2": 2}
+#     jitter_x = 0.07
+#     jitter_y = 0.15
+#     rng = np.random.default_rng(seed=42)
 
-    for model, group in df.groupby(COL_MODEL):
-        color = MODEL_COLORS.get(model, "#888888")
-        x_vals = group[COL_PROMPT].map(prompt_map) + np.random.uniform(-jitter_x, jitter_x, len(group))
-        y_vals = group[COL_TOTAL] + np.random.uniform(-jitter_y, jitter_y, len(group))
-        ax.scatter(x_vals, y_vals, label=model, color=color, alpha=0.75, s=70, edgecolors="white", linewidth=0.5)
+#     for model, group in df.groupby(COL_MODEL):
+#         color = MODEL_COLORS.get(model, "#888888")
+#         x_vals = group[COL_PROMPT].map(prompt_map) + rng.uniform(-jitter_x, jitter_x, len(group))
+#         y_vals = group[COL_TOTAL].values + rng.uniform(-jitter_y, jitter_y, len(group))
+#         ax.scatter(x_vals, y_vals, label=model, color=color, alpha=0.75, s=70, edgecolors="white", linewidth=0.5)
 
-    # Add mean lines per model per prompt
-    for model, group in df.groupby(COL_MODEL):
-        color = MODEL_COLORS.get(model, "#888888")
-        means = group.groupby(COL_PROMPT)[COL_TOTAL].mean()
-        if "P1" in means and "P2" in means:
-            ax.plot([1, 2], [means["P1"], means["P2"]], color=color,
-                    linewidth=2, linestyle="--", alpha=0.8)
+#     # Add mean lines per model per prompt
+#     for model, group in df.groupby(COL_MODEL):
+#         color = MODEL_COLORS.get(model, "#888888")
+#         means = group.groupby(COL_PROMPT)[COL_TOTAL].mean()
+#         if "P1" in means and "P2" in means:
+#             ax.plot([1, 2], [means["P1"], means["P2"]], color=color,
+#                     linewidth=2, linestyle="--", alpha=0.8)
 
-    ax.set_title("Total Score by Model and Prompt", fontsize=14, fontweight="bold", pad=12)
-    ax.set_xlabel("Prompt", fontsize=12)
-    ax.set_ylabel("Total Score (out of 15)", fontsize=12)
-    ax.set_xticks([1, 2])
-    ax.set_xticklabels(["Prompt 1", "Prompt 2"], fontsize=11)
-    ax.set_ylim(-1, PERFECT_SCORE + 1)
-    ax.legend(title="Model", fontsize=10)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    fig.tight_layout()
-    save(fig, "chart3_scatter_model_prompt.png")
+#     ax.set_title("Total Score by Model and Prompt", fontsize=14, fontweight="bold", pad=12)
+#     ax.set_xlabel("Prompt", fontsize=12)
+#     ax.set_ylabel("Total Score (out of 15)", fontsize=12)
+#     ax.set_xticks([1, 2])
+#     ax.set_xticklabels(["Prompt 1", "Prompt 2"], fontsize=11)
+#     ax.set_xlim(0.5, 2.5)
+#     ax.set_ylim(-1, PERFECT_SCORE + 1)
+#     ax.legend(title="Model", fontsize=10)
+#     ax.spines["top"].set_visible(False)
+#     ax.spines["right"].set_visible(False)
+#     fig.tight_layout()
+#     save(fig, "chart3_scatter_model_prompt.png")
 
 
 # Chart 4: Spider Charts per Model
@@ -403,7 +405,7 @@ def main():
     print("=" * 55)
     chart_model_comparison(df)
     chart_prompt_comparison(df)
-    chart_scatter_model_prompt(df)
+    # chart_scatter_model_prompt(df)
     chart_spider(df)
     chart_stacked_errors(df, error_df)
 
@@ -411,4 +413,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    log_path = os.path.join(OUTPUT_FOLDER, "analysis_results.txt")
+    with open(log_path, "w", encoding="utf-8") as log_file:
+        sys.stdout = log_file
+        main()
+    sys.stdout = sys.__stdout__
+    print(f"Done. Results saved to '{log_path}' and charts to '{OUTPUT_FOLDER}/' folder.")
